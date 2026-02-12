@@ -5,3 +5,5 @@ langgraph
 tweepy
 pillow
 python-dotenv
+Pillow>=9.0.0
+imageio[ffmpeg]  # Optional: for video export later

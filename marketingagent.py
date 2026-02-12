@@ -16,6 +16,7 @@ from langchain_community.tools import DuckDuckGoSearchRun
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
+#from tools.facebook_group_tool import search_facebook_groups, reply_to_facebook_post
 
 from tools import post_to_twitter  # Only need this one
 
@@ -37,21 +38,38 @@ website = input_data["website"]
 category = input_data["category"]
 focus = input_data["focus_keyword"]
 creds = input_data["twitter"]
+#facebook_creds = input_data.get("facebook", {}) 
 
 # LLM
 llm = ChatOpenAI(
-    base_url="http://strategyengine.one/api/localai/v1",
+    base_url="http://192.168.100.122:32553/v1",
     api_key="ollama",
+    #model="qwen2.5:3b-instruct-q5_K_M",
     model="llama3.1:8b",
     temperature=0.2,
     timeout=300
 )
 
 search_tool = DuckDuckGoSearchRun()
+
+# Bind the **cred-aware** versions to the LLM
+#def bind_facebook_tools(llm, fb_creds):
+ #   search_bound = search_facebook_groups.bind(facebook_creds=fb_creds)
+ #   reply_bound  = reply_to_facebook_post.bind(facebook_creds=fb_creds)
+ #   return [search_bound, reply_bound]
+
+tools = [
+    search_tool,
+    post_to_twitter,
+   # *bind_facebook_tools(llm, facebook_creds)
+]
+
 tools = [search_tool, post_to_twitter]
+#         search_facebook_groups, reply_to_facebook_post]
 
 # Keep bind_tools for planning, but we'll parse manually
 llm_with_tools = llm.bind_tools(tools)
+
 
 # State
 class AgentState(TypedDict):
@@ -110,7 +128,7 @@ SYSTEM_PROMPT = Path("system_prompt.txt").read_text(encoding="utf-8").strip()
 
 # Manual tweet posting from JSON in content
 def post_tweets_from_content(content: str):
-    print("\n=== POSTING TWEETS FROM JSON IN CONTENT ===")
+    print("\n=== POSTING TWEETS FROM JSON IN CONTENT ===" + content[:1000])
     
     # Normalize Unicode
     import unicodedata
@@ -120,8 +138,10 @@ def post_tweets_from_content(content: str):
     import re
     pattern = r'(\{"name"\s*:\s*"post_to_twitter"[^}]*\{[^}]*\}[^}]*\})'
     json_blocks = re.findall(pattern, content)
-    
+
+    print("JSON BLOCKS FOUND:", len(json_blocks))
     # Fallback: Try original if above fails
+    
     if not json_blocks:
         json_blocks = re.findall(r'\{[^{}]*"name"\s*:\s*"post_to_twitter"[^{}]*\{[^{}]*\}[^{}]*\}', content)
     

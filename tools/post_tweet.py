@@ -19,11 +19,11 @@ def post_to_twitter(tweet: str, twitter_creds: Dict[str, str]) -> str:
         return "Error: Tweet too long (>280 chars)"
 
     # === 1. Generate Image ===
-    
+
     try:
-        from .generate_image import generate_funny_image  # Local import
+        from .generate_image import generate_funny_image  #generate_funny_image
         log.info("Generating image for tweet...")
-        image_path = generate_funny_image.run({"tweet_text": tweet})
+        image_path =generate_funny_image.run({"tweet_text": tweet}) # generate_funny_image.run({"tweet_text": tweet})
         log.info(f"Image generated: {image_path}")
     except Exception as e:
         log.error(f"Image generation failed: {e}")
